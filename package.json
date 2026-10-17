@@ -1,0 +1,15 @@
+
+{
+  "name": "islam-tafsir-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend API for the ISLAM app",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5"
+  }
+}
