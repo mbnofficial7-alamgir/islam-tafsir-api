@@ -46,7 +46,7 @@ app.get("/qf-test", async (req, res) => {
     ).toString("base64");
 
     const tokenResponse = await fetch(
-    `${AUTH_BASE_URL}/oauth2/token`
+    `${AUTH_BASE_URL}/oauth2/token`,
       {
         method: "POST",
         headers: {
@@ -81,7 +81,7 @@ app.get("/qf-test", async (req, res) => {
     const tokenData = await tokenResponse.json();
 
     const chaptersResponse = await fetch(
-      `${API_BASE_URL}/content/api/v4/chapters`
+      `${API_BASE_URL}/content/api/v4/chapters`,
       {
         headers: {
           "x-auth-token": tokenData.access_token,
