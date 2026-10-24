@@ -81,7 +81,7 @@ app.get("/qf-test", async (req, res) => {
     const tokenData = await tokenResponse.json();
 
     const chaptersResponse = await fetch(
-      "https://apis-prelive.quran.foundation/content/api/v4/chapters",
+      `${API_BASE_URL}/content/api/v4/chapters`
       {
         headers: {
           "x-auth-token": tokenData.access_token,
