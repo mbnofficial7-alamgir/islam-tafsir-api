@@ -46,7 +46,7 @@ app.get("/qf-test", async (req, res) => {
     ).toString("base64");
 
     const tokenResponse = await fetch(
-      "https://prelive-oauth2.quran.foundation/oauth2/token",
+    `${AUTH_BASE_URL}/oauth2/token`
       {
         method: "POST",
         headers: {
