@@ -50,13 +50,22 @@ app.get("/qf-test", async (req, res) => {
       }
     );
 
-    if (!tokenResponse.ok) {
-      return res.status(502).json({
-        status: "error",
-        step: "authentication",
-        message: "Quran Foundation authentication failed",
-        upstreamStatus: tokenResponse.status
-      });
+   if (!tokenResponse.ok) {
+  const errorDetails = await tokenResponse.text();
+
+  console.error(
+    "QF authentication error:",
+    tokenResponse.status,
+    errorDetails
+  );
+
+  return res.status(502).json({
+    status: "error",
+    step: "authentication",
+    message: "Quran Foundation authentication failed",
+    upstreamStatus: tokenResponse.status,
+    details: errorDetails
+  });
     }
 
     const tokenData = await tokenResponse.json();
