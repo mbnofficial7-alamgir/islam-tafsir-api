@@ -4,7 +4,17 @@ const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const QF_ENV = process.env.QF_ENV || "prelive";
 
+const AUTH_BASE_URL =
+  QF_ENV === "production"
+    ? "https://oauth2.quran.foundation"
+    : "https://prelive-oauth2.quran.foundation";
+
+const API_BASE_URL =
+  QF_ENV === "production"
+    ? "https://apis.quran.foundation"
+    : "https://apis-prelive.quran.foundation";
 app.use(cors());
 app.use(express.json());
 
