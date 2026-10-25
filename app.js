@@ -205,6 +205,88 @@ app.get("/qf-test", async (req, res) => {
   }
 });
 
+app.get("/tafsir-test/:tafsirId/:ayahKey", async (req, res) => {
+  try {
+    const clientId = process.env.QF_CLIENT_ID;
+    const clientSecret = process.env.QF_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      return res.status(500).json({
+        status: "error",
+        message: "Server credentials are not configured"
+      });
+    }
+
+    const credentials = Buffer.from(
+      `${clientId}:${clientSecret}`
+    ).toString("base64");
+
+    const tokenResponse = await fetch(
+      `${AUTH_BASE_URL}/oauth2/token`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+          grant_type: "client_credentials",
+          scope: "content"
+        })
+      }
+    );
+
+    if (!tokenResponse.ok) {
+      return res.status(502).json({
+        status: "error",
+        step: "authentication",
+        upstreamStatus: tokenResponse.status
+      });
+    }
+
+    const tokenData = await tokenResponse.json();
+    const { tafsirId, ayahKey } = req.params;
+
+    if (!/^\d+$/.test(tafsirId) ||
+        !/^\d+:\d+$/.test(ayahKey)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Use a tafsir ID and ayah key such as 164/1:1"
+      });
+    }
+
+    const tafsirResponse = await fetch(
+      `${API_BASE_URL}/content/api/v4/tafsirs/${tafsirId}/by_ayah/${ayahKey}`,
+      {
+        headers: {
+          "x-auth-token": tokenData.access_token,
+          "x-client-id": clientId
+        }
+      }
+    );
+
+    const responseText = await tafsirResponse.text();
+
+    if (!tafsirResponse.ok) {
+      return res.status(502).json({
+        status: "error",
+        step: "tafsir",
+        upstreamStatus: tafsirResponse.status,
+        details: responseText
+      });
+    }
+
+    res.type("application/json").send(responseText);
+  } catch (error) {
+    console.error("Tafsir test failed:", error.message);
+
+    res.status(500).json({
+      status: "error",
+      message: "Unable to retrieve tafsir"
+    });
+  }
+});
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`ISLAM Tafsir API running on port ${PORT}`);
 });
