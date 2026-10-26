@@ -114,7 +114,99 @@ app.get("/tafsirs", async (req, res) => {
     });
   }
 });
-      
+
+app.get("/tafsir/:surah/:ayah", async (req, res) => {
+  try {
+    const { surah, ayah } = req.params;
+
+    if (
+      !/^\d+$/.test(surah) ||
+      !/^\d+$/.test(ayah) ||
+      Number(surah) < 1 ||
+      Number(surah) > 114 ||
+      Number(ayah) < 1
+    ) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid surah or ayah number"
+      });
+    }
+
+    const clientId = process.env.QF_CLIENT_ID;
+    const clientSecret = process.env.QF_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      return res.status(500).json({
+        status: "error",
+        message: "Server credentials are not configured"
+      });
+    }
+
+    const credentials = Buffer.from(
+      `${clientId}:${clientSecret}`
+    ).toString("base64");
+
+    const tokenResponse = await fetch(
+      `${AUTH_BASE_URL}/oauth2/token`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${credentials}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+          grant_type: "client_credentials",
+          scope: "content"
+        })
+      }
+    );
+
+    if (!tokenResponse.ok) {
+      return res.status(502).json({
+        status: "error",
+        message: "Authentication failed"
+      });
+    }
+
+    const tokenData = await tokenResponse.json();
+    const ayahKey = `${surah}:${ayah}`;
+
+    const tafsirResponse = await fetch(
+      `${API_BASE_URL}/content/api/v4/tafsirs/164/by_ayah/${ayahKey}`,
+      {
+        headers: {
+          "x-auth-token": tokenData.access_token,
+          "x-client-id": clientId
+        }
+      }
+    );
+
+    const data = await tafsirResponse.json();
+
+    if (!tafsirResponse.ok) {
+      return res.status(502).json({
+        status: "error",
+        message: "Tafsir request failed",
+        upstreamStatus: tafsirResponse.status
+      });
+    }
+
+    res.json({
+      status: "ok",
+      surah: Number(surah),
+      ayah: Number(ayah),
+      tafsir: data.tafsir || data
+    });
+  } catch (error) {
+    console.error("Bengali tafsir error:", error.message);
+
+    res.status(500).json({
+      status: "error",
+      message: "Unable to retrieve Bengali tafsir"
+    });
+  }
+});
+          
 app.get("/qf-test", async (req, res) => {
   try {
     const clientId = process.env.QF_CLIENT_ID;
